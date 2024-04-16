@@ -1,12 +1,12 @@
 # Author: Raf Shayder Leon Gutierrez, Telco Asociado : https://www.linkedin.com/in/raf-shayder-leon
- #2024-04-12
-
+ #2024-04-12 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from io import BytesIO
 import smtplib
-
+msg = MIMEMultipart()
 class Email:
     __host='smtp.gmail.com'
     __port=465
@@ -20,6 +20,7 @@ class Email:
         self.cc=cc
         self.body=body
         self.attachment=attachment
+
     @property
     def firma(self):
         return self.__firma
@@ -57,19 +58,54 @@ class Email:
             print(mensaje,mail)
         #veliricar
         return error_mail
-    def attachfile(self,msg):
+    def adjuntararchivo(self,nombrearchivo):
+        self.__attachfile(nombrearchivo)
+    def __attachfile(self,attachment):
         try:
-            with open(self.attachment, "rb") as attachment:
+            with open(attachment, "rb") as archivo:
                 part = MIMEBase('application', 'octet-stream')
-                part.set_payload(attachment.read())
+                part.set_payload(archivo.read())
                 encoders.encode_base64(part)
                 part.add_header('Content-Disposition', f'attachment; filename={attachment}')
                 # Attach the file
                 msg.attach(part)
         except Exception as e:
             print(f"Could not attach {attachment} due to {e}")
+    def adjuntardata(self, data, filename):
+        try:
+            if('DataFrame' in str(type(data))):
+                buffer = BytesIO()
+                if filename.endswith('.xlsx'):
+                    content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    data.to_excel(buffer, index=False)
+                    data = buffer.getvalue()
+
+                elif filename.endswith('.csv'):
+                    content_type = 'text/csv'
+                    data.to_csv(buffer, index=False)
+                    data = buffer.getvalue()
+                elif filename.endswith('.txt'):
+                    
+                    content_type = 'text/plain'
+                    data.to_csv(buffer, index=False, sep='\t')
+                    data = buffer.getvalue()
+                else:
+                    content_type = 'application/octet-stream'
+                    data = None
+            else:
+                content_type = 'application/octet-stream'
+            # Crear objeto MIMEBase para el adjunto
+            part = MIMEBase('application', 'octet-stream')
+            part.set_payload(data)
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename={filename}')
+            part.add_header('Content-Type', content_type)
+            msg.attach(part)
+            
+        except Exception as e:
+            print(f"Could not attach {filename} due to {e}")
+    
     def enviarMail(self):
-        msg = MIMEMultipart()
         if not  (self.verificarcorreo(self.from_email) and self.verificarcorreo(self.to_email)):
             msg['From'] = self.from_email
             msg['To'] = self.to_email
@@ -77,12 +113,15 @@ class Email:
             msg.attach(MIMEText(self.body,'plain'))
             #attachment file
             if(self.attachment):
-                self.attachfile(msg)
-            # Send the email
+                self.__attachfile(self.attachment)
+            # Send the email and login
             with smtplib.SMTP_SSL(self.host, self.port) as smtp:
-                smtp.login(self.from_email, self.from_pass)  
-                smtp.send_message(msg)
-            print("mensaje enviado")
+                try:
+                    smtp.login(self.from_email, self.from_pass)  
+                    smtp.send_message(msg)
+                    print("mensaje enviado")
+                except Exception as e:
+                    print("Login wrong",e)
         else:
             print("datos incorrectos")
 
