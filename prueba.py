@@ -7,5 +7,15 @@ correo=Email('ticketsproactivos@gmail.com','tyez inuc oijr jitu','raf.leon@telef
 
 correo.enviarMail()
 
+#creame una funcion data, filtro, datafiltrada
 
 
+
+def  filtro(data,filtro):
+    #procesar informacion
+    datafiltrada=None
+    return datafiltrada
+    
+
+
+    

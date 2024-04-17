@@ -10,6 +10,35 @@ t2=t2[campos_t2]
 
 data=pd.merge(t1,t2,left_on=campos_t1[0],right_on=campos_t2[0],how='inner')
 
-top_10_by_zone = data.groupby('Zona').apply(lambda x: x.nlargest(10, columns=['DELTA RTWP (dB) > 2 dB', '# drops 4g']))
+grupo=data['Zona'].unique()
 
-top_10_by_zone.to_excel("prueba.xlsx")
+
+def evaluar(x, columnas, codunico):
+    newdata=pd.DataFrame()
+    tenfirst = x.sort_values(by=columnas, ascending=False).head(100)
+    registros=tenfirst[codunico].unique()
+    for ss,cod in enumerate(registros):
+        row ={'codunico':cod,'detalle':'*PROACTIVO CALIDAD MOVIL |'}
+        unirdup=tenfirst[tenfirst[codunico]==cod]
+        for index, unir in unirdup.iterrows():
+            row['detalle']+='*'
+            row["detalle"]+='- Delta RTWP: {}'.format(unir['DELTA RTWP (dB) > 2 dB'])
+            row["detalle"]+='- Drops 4g: {}'.format(unir['# drops 4g'])
+            row["detalle"]+='- Sector: {}'.format(unir['SECTOR'])
+        row["detalle"]=[row['detalle']]
+        temp=pd.DataFrame(row,index=[ss])
+        newdata=pd.concat([newdata,temp],sort=False)
+    return newdata.head(10)   
+           
+filtroarbol=pd.DataFrame()
+for registro in grupo:
+    datazona=data[data['Zona']==registro]
+    datazona=evaluar(datazona,columnas=['DELTA RTWP (dB) > 2 dB', '# drops 4g'],codunico='CODIGO UNICO')
+    datazona['zona']=registro
+    filtroarbol=pd.concat([filtroarbol,datazona])
+
+filtroarbol['ESPECIALIDAD']='RADIO-RADIO'
+filtroarbol['ACCIONES']='EN SITIO REVISAR Y CORRECCION DE PROBLEMA REPORTADO POR CALIDAD MOVIL'
+filtroarbol.to_excel("prueba.xlsx",sheet_name='movil_prioridad_zona',index=False)
+
+
