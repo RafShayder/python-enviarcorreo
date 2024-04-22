@@ -1,9 +1,11 @@
-from functions import leerarchivo,unirdataframe,columnaunica,procesar
 
-data_lima=leerarchivo('./data/lista_lima.xlsx',['CODIGO UNICO','NOMBRE_EBC','DELTA RTWP (dB) > 2 dB', '# drops 4g','SECTOR'])
-data_sector=leerarchivo('./data/codigounico-sector.xlsx',['Codigo Unico','Zona'],'Base')
-data_merge=unirdataframe(data_lima,data_sector,'CODIGO UNICO','Codigo Unico')
-zona=columnaunica(data_merge,'Zona')
-data_arbol=procesar(data_merge,zona,'Zona',['DELTA RTWP (dB) > 2 dB', '# drops 4g'])
-print(data_arbol)
-
+from src.limpieza import Limpieza
+limpiar=Limpieza('CODIGO UNICO','DELTA RTWP (dB) > 2 dB','# drops 4g','SECTOR',['CEI','DELTA RTWP (dB) > 2 dB', '# drops 4g'],[True,False,False],'Zona')
+limadata=limpiar.leerarchivo('./inputvariable/LimaMovil.xlsx')
+limadata=limpiar.blacklist(limadata,'CODIGO UNICO','./datastatic/blacklist.xlsx')
+zonadata=limpiar.leerarchivo('./datastatic/codigounico-sector.xlsx','Base')
+marge=limpiar.unirdataframe(limadata,zonadata,'CODIGO UNICO','Codigo Unico')
+newdata=limpiar.procesar(marge)
+newdata=limpiar.unirdataframe(newdata,zonadata,'ID_UNICO','Codigo Unico')
+newdata=limpiar.reordenar(['Departamento','Nombre Sitio','Tipo de Sitio HISPAM','zona','ID_UNICO','ESPECIALIDAD','PROBLEMA','ACCIONES'])
+newdata.to_excel("prueba.xlsx",index=False)
