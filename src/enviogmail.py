@@ -108,7 +108,7 @@ class Email:
     def enviarMail(self):
         if not  (self.verificarcorreo(self.from_email) and self.verificarcorreo(self.to_email)):
             msg['From'] = self.from_email
-            msg['To'] = self.to_email
+            msg['To'] = self.to_email 
             msg['Subject'] = self.subject
             msg.attach(MIMEText(self.body,'plain'))
             #attachment file

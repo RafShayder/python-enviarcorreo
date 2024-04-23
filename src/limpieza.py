@@ -1,23 +1,29 @@
+# Author: Raf Shayder Leon Gutierrez, Telco Asociado : https://www.linkedin.com/in/raf-shayder-leon
+ #2024-04-12 
 import pandas as pd
-
 class Limpieza:
     data=None
     especialidad='RADIO-RADIO'
     acciones='EN SITIO REVISAR Y CORRECCION DE PROBLEMA REPORTADO POR CALIDAD MOVIL'
     cantidadtop=10
     cantidadfirsttop=100
-    #concatenar=[]
-    def __init__(self,nombrecodunico,nombredeltartwp,nombredrops,nombresector,listsort,ordenlista,nombrezona): 
+    
+    def __init__(self,nombrecodunico,concatenardetalle,listsort,ordenlista,nombrezona): 
         self.nombrecodunico=nombrecodunico
-        self.nombredeltartwp=nombredeltartwp
-        self.nombredrops=nombredrops
-        self.nombresector=nombresector
+        self.concatenardetalle=concatenardetalle
         self.listsort=listsort
         self.ordenlista=ordenlista
         self.nombrezona=nombrezona
         
     def leerarchivo(self,rutaexcel,nombrehoja=None):
-        data= pd.read_excel(rutaexcel) if nombrehoja==None else pd.read_excel(rutaexcel,sheet_name=nombrehoja)
+        if(rutaexcel.endswith('.csv')):
+            #prueba
+            data= pd.read_csv(rutaexcel,on_bad_lines='skip',sep=';',low_memory=False)
+        elif (rutaexcel.endswith('.xlsx')):   
+            data= pd.read_excel(rutaexcel) if nombrehoja==None else pd.read_excel(rutaexcel,sheet_name=nombrehoja)
+        else:
+            print('Error al leer datos, tipo de archivo')
+            data=None
         #data=data[campos]
         return data
     def unirdataframe(self,data1,data2,keyleft,keyright):
@@ -51,9 +57,8 @@ class Limpieza:
             unirdup=tenfirst[tenfirst[self.nombrecodunico]==cod]
             for index, unir in unirdup.iterrows():
                 row['PROBLEMA']+='*'
-                #for a in self.concatenar:
-                #    row['PROBLEMA']+='{} : '.format(a)+'{} -'.format(unir[a])
-                row['PROBLEMA']+='*'+'- Delta RTWP: {}'.format(unir[self.nombredeltartwp])+'- Drops 4g: {}'.format(unir[self.nombredrops])+'- Sector: {}'.format(unir[self.nombresector])
+                for a in self.concatenardetalle:
+                    row['PROBLEMA']+='{} : '.format(a)+'{} -'.format(unir[a])                
             row["PROBLEMA"]=[row['PROBLEMA']]
             temp=pd.DataFrame(row,index=[ss])
             newdata=pd.concat([newdata,temp],sort=False)

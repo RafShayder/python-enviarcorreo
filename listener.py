@@ -1,3 +1,5 @@
+# Author: Raf Shayder Leon Gutierrez, Telco Asociado : https://www.linkedin.com/in/raf-shayder-leon
+ #2024-04-12 
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
