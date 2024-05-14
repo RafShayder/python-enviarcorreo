@@ -15,23 +15,67 @@ def Lima_movil():
     #newdata.to_excel("Data_Lima_movil.xlsx",index=False)
     return newdata
 def Provincia_movil():
-    #'Movil Provincias'
-    limpiarProvincias=Limpieza('CodigoUnicoEStacion',['FRU','BOARD','PRODUCTNUMBER','SERIAL','TEMP'],['TEMP'],[True],'Zona')
-    limpiarProvincias.cantidadtop=8
-    provinciadata=limpiarProvincias.leerarchivo('./inputvariable/ATENUACIONES FO Y TEMPERATURA DE RRU.xlsx','TEMPERATURA RRU')
-    codunico_nombreunico=limpiarProvincias.leerarchivo('./datastatic/CLASE_ESTACIONES_BASE_SECTOR.csv')
+    limpiarProvincia=Limpieza('CODIGO UNICO',['DELTA RTWP (dB) > 2 dB','# drops 4g','SECTOR','CEI','BANDA'],['DELTA RTWP (dB) > 2 dB', '# drops 4g'],[False,False],'Zona')
+    limadata=limpiarProvincia.leerarchivo('./inputvariable/ProvinciaMovil.xlsx')
+    limadata=limpiarProvincia.blacklist(limadata,'CODIGO UNICO','./datastatic/blacklist.xlsx')
+    zonadata=limpiarProvincia.leerarchivo('./datastatic/codigounico-sector.xlsx','Base')
+    marge=limpiarProvincia.unirdataframe(limadata,zonadata,'CODIGO UNICO','Codigo Unico')
+    newdata=limpiarProvincia.procesar(marge)
+    newdata=limpiarProvincia.unirdataframe(newdata,zonadata,'ID_UNICO','Codigo Unico')
+    newdata=limpiarProvincia.reordenar(['Departamento','Nombre Sitio','Tipo de Sitio HISPAM','zona','ID_UNICO','ESPECIALIDAD','PROBLEMA','ACCIONES'])
+    #newdata.to_excel("Data_Lima_movil.xlsx",index=False)
+    return newdata
+
+
+def Temperatura():
+    #'Temperatura'
+    temperatura=Limpieza('CodigoUnicoEStacion',['FRU','BOARD','PRODUCTNUMBER','SERIAL','TEMP'],['TEMP'],[False],'Zona')
+    temperatura.cantidadtop=8
+    temperatura.problemainicial='*PROACTIVO ATENUACIONES |'
+    temperatura.acciones='EN SITIO REVISAR Y CORRECCION DE PROBLEMA REPORTADO POR Temperatura'
+    temperaturadata=temperatura.leerarchivo('./inputvariable/ATENUACIONES FO Y TEMPERATURA DE RRU.xlsx','TEMPERATURA RRU')
+    codunico_nombreunico=temperatura.leerarchivo('./datastatic/CLASE_ESTACIONES_BASE_SECTOR.csv')
     codunico_nombreunico=codunico_nombreunico.drop_duplicates(subset='Nombre Estacion Base Estandar(Ingenieria)', keep = 'first')
-    marge1=limpiarProvincias.unirdataframe(provinciadata,codunico_nombreunico,'EB','Nombre Estacion Base Estandar(Ingenieria)')
-    zonadata=limpiarProvincias.leerarchivo('./datastatic/codigounico-sector.xlsx','Base') #se repite
-    marge=limpiarProvincias.unirdataframe(marge1,zonadata,'CodigoUnicoEStacion','Codigo Unico')
-    newdata=limpiarProvincias.procesar(marge)
-    newdata=limpiarProvincias.unirdataframe(newdata,zonadata,'ID_UNICO','Codigo Unico')
-    newdata=limpiarProvincias.reordenar(['Departamento','Nombre Sitio','Tipo de Sitio HISPAM','zona','ID_UNICO','ESPECIALIDAD','PROBLEMA','ACCIONES'])
+    marge1=temperatura.unirdataframe(temperaturadata,codunico_nombreunico,'EB','Nombre Estacion Base Estandar(Ingenieria)')
+    zonadata=temperatura.leerarchivo('./datastatic/codigounico-sector.xlsx','Base') #se repite
+    marge=temperatura.unirdataframe(marge1,zonadata,'CodigoUnicoEStacion','Codigo Unico')
+    newdata=temperatura.procesar(marge)
+    newdata=temperatura.unirdataframe(newdata,zonadata,'ID_UNICO','Codigo Unico')
+    newdata=temperatura.reordenar(['Departamento','Nombre Sitio','Tipo de Sitio HISPAM','zona','ID_UNICO','ESPECIALIDAD','PROBLEMA','ACCIONES'])
     #newdata.to_excel("Data_Provincia_movil.xlsx",index=False)
     return newdata
+
+def Atenuaciones():
+    #'Atenuaciones'
+    atenuaciones=Limpieza('CodigoUnicoEStacion',['WL1','WL2','DlLoss','UlLoss','mmax'],['mmax'],[False],'Zona')
+    atenuaciones.cantidadtop=8
+    atenuaciones.problemainicial='*PROACTIVO ATENUACIONES |'
+    atenuaciones.acciones='EN SITIO REVISAR Y CORRECCION DE PROBLEMA REPORTADO POR ATENUACIONES'
+    atenuacionesdata=atenuaciones.leerarchivo('./inputvariable/ATENUACIONES FO Y TEMPERATURA DE RRU.xlsx','ATENUACIONES EN FO')
+    atenuacionesdata['mmax']=atenuacionesdata[['DlLoss','UlLoss']].max(axis=1)
+    codunico_nombreunico=atenuaciones.leerarchivo('./datastatic/CLASE_ESTACIONES_BASE_SECTOR.csv')
+    codunico_nombreunico=codunico_nombreunico.drop_duplicates(subset='Nombre Estacion Base Estandar(Ingenieria)', keep = 'first')
+    marge1=atenuaciones.unirdataframe(atenuacionesdata,codunico_nombreunico,'EB','Nombre Estacion Base Estandar(Ingenieria)')
+    zonadata=atenuaciones.leerarchivo('./datastatic/codigounico-sector.xlsx','Base') #se repite
+    marge=atenuaciones.unirdataframe(marge1,zonadata,'CodigoUnicoEStacion','Codigo Unico')
+    newdata=atenuaciones.procesar(marge)
+    newdata=atenuaciones.unirdataframe(newdata,zonadata,'ID_UNICO','Codigo Unico')
+    newdata=atenuaciones.reordenar(['Departamento','Nombre Sitio','Tipo de Sitio HISPAM','zona','ID_UNICO','ESPECIALIDAD','PROBLEMA','ACCIONES'])
+    #newdata.to_excel("Data_Atenuaciones_movil.xlsx",index=False)
+    return newdata
+
+
+
 datalima=Lima_movil()
 dataprovincia=Provincia_movil()
-correo=Email('ticketsproactivos@gmail.com','tyez inuc oijr jitush','raf.leon@telefonica.com','Prueba',cc='angela.bastidas@telefonica.com')
+datatemperatura=Temperatura()
+dataatenuacion=Atenuaciones()
+correo=Email('ticketsproactivos@gmail.com','tyez inuc oijr jitushadw','raf.leon@telefonica.com,dalia.rodriguez@telefonica.com','Prueba',cc='angela.bastidas@telefonica.com')
 correo.adjuntardata(datalima, 'data_Lima_Movil.xlsx')
 correo.adjuntardata(dataprovincia,'data_Provincia_Movil.xlsx')
+correo.adjuntardata(datatemperatura,'dataTemperatura.xlsx')
+correo.adjuntardata(dataatenuacion,'dataAtenuaciones.xlsx')
 correo.enviarMail()
+
+
+

@@ -5,6 +5,7 @@ class Limpieza:
     data=None
     especialidad='RADIO-RADIO'
     acciones='EN SITIO REVISAR Y CORRECCION DE PROBLEMA REPORTADO POR CALIDAD MOVIL'
+    problemainicial='*PROACTIVO CALIDAD MOVIL |'
     cantidadtop=10
     cantidadfirsttop=100
     
@@ -53,7 +54,7 @@ class Limpieza:
         tenfirst = x.sort_values(by=self.listsort, ascending=self.ordenlista).head(self.cantidadfirsttop)
         registros=tenfirst[self.nombrecodunico].unique()
         for ss,cod in enumerate(registros):
-            row ={'ID_UNICO':cod,'PROBLEMA':'*PROACTIVO CALIDAD MOVIL |'}
+            row ={'ID_UNICO':cod,'PROBLEMA':self.problemainicial}
             unirdup=tenfirst[tenfirst[self.nombrecodunico]==cod]
             for index, unir in unirdup.iterrows():
                 row['PROBLEMA']+='*'
